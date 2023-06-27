@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-deployment
+  labels:
+    app: webapp
+spec:
+  #replica = how many pods do you want to create?
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - name: webapp
+        #image from docker hub
+        image: nanajanashia/k8s-demo-app:v1.0
+        ports:
+        - containerPort: 3000
+        #value from secret and configmap
+        env:
+        - name: USER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-user
+        - name: USER_PWD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-password
+        - name: DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: mongo-config
+              key: mongo-url      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+spec:
+  selector:
+    app: webapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+      #external port
+      nodePort: 32510
